@@ -1,0 +1,769 @@
+---
+title: "Stats 141SL Final Project"
+author: "Hayley Todd"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+setwd("/Users/Hayley/Downloads/Stats Class Material")
+finalproj <- read.csv("Statistics Data  - Page 3.csv", na.strings = c("", "NA"))
+#View(finalproj)
+```
+
+49 people responded to question 2
+
+```{r}
+textmine <- finalproj[c(1,3)]
+textmine
+library(dplyr)
+
+textmine <- textmine %>% na.omit()
+textmine$top_words <- as.character(textmine$top_words)
+
+text_df <- tibble(line = 1:length(textmine$top_words), text = textmine$top_words)
+
+library(tidytext)
+
+text_df <- text_df %>% unnest_tokens(word, text)
+#words <- as.data.frame(text_df[,2])
+#sort(unique(words[,1]))
+```
+
+```{r}
+q2words <- text_df %>% count(word, sort = T)
+q2words
+```
+
+
+Plot of raw words (typos fixed and multiple words combined):
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+#texttrial <- text_df %>%
+#  count(word, sort = TRUE)
+
+q2words %>% dplyr::filter(n > 1) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  xlab(NULL) +
+  theme_minimal() +
+  coord_flip() 
+
+#text_df <- texttrial
+```
+
+Raw words word cloud:
+
+```{r}
+library("wordcloud")
+set.seed(135719)
+wordcloud(words = q2words$word, freq=q2words$n, min.freq = 1, max.words = 150, random.order = FALSE, rot.per = 0.35, colors = brewer.pal(5, "Paired"))
+```
+
+Many words had synonyms or similar themes (such as "diversity" and "diverse"), so we decided to combine those to figure out the major word themes.
+
+Cleaning and combining synonyms/similar themes:
+
+```{r}
+cleantext <- text_df
+
+applicable <- c(which(cleantext[,2] == "application"), which(cleantext[,2] == "applicantdriven"), which(cleantext[,2] == "realworld"), which(cleantext[,2] == "useful"))
+cleantext[applicable, 2] <- "applicable"
+
+##########
+
+difficult <- c(which(cleantext[,2] == "challenging"), which(cleantext[,2] == "hard"), which(cleantext[,2] == "intensive"), which(cleantext[,2] == "advance"), which(cleantext[,2] == "complicated"), which(cleantext[,2] == "overwhelming"), which(cleantext[,2] == "toomuchinformation"), which(cleantext[,2] == "dense"))
+cleantext[difficult, 2] <- "difficult"
+
+############
+
+complex <- c(which(cleantext[,2] == "comprehensive"), which(cleantext[,2] == "crossdisciplinary"))
+cleantext[complex, 2] <- "complex"
+
+###########
+
+collaborative <- c(which(cleantext[,2] == "collaboration"), which(cleantext[,2] == "cooperation"))
+cleantext[collaborative, 2] <- "collaborative"
+
+###########
+
+team <- c(which(cleantext[,2] == "group"), which(cleantext[,2] == "groupwork"), which(cleantext[,2] == "teamwork"), which(cleantext[,2] == "teamworking"), which(cleantext[,2] == "teamoriented"))
+cleantext[team, 2] <- "team"
+
+###########
+
+diversity <- c(which(cleantext[,2] == "diverse"))
+cleantext[diversity, 2] <- "diversity"
+
+###########
+
+easy <- c(which(cleantext[,2] == "notthathard"), which(cleantext[,2] == "easycourse"), which(cleantext[,2] == "simple"))
+cleantext[easy, 2] <- "easy"
+
+############
+
+engaging <- c(which(cleantext[,2] == "engagement"))
+cleantext[engaging, 2] <- "engaging"
+
+###########
+
+enjoyable <- c(which(cleantext[,2] == "enjoy"), which(cleantext[,2] == "fun"), which(cleantext[,2] == "joyful"), which(cleantext[,2] == "happy"))
+cleantext[enjoyable, 2] <- "enjoyable"
+
+############
+
+positive <- c(which(cleantext[,2] == "good"))
+cleantext[positive, 2] <- "positive"
+
+############
+
+interactive <- c(which(cleantext[,2] == "handson"))
+cleantext[interactive, 2] <- "interactive"
+
+############
+
+insightful <- c(which(cleantext[,2] == "insight"))
+cleantext[insightful, 2] <- "insightful"
+
+############
+
+interesting <- c(which(cleantext[,2] == "intriguing"))
+cleantext[interesting, 2] <- "interesting"
+
+###########
+
+manageable <- c(which(cleantext[,2] == "managable"))
+cleantext[manageable, 2] <- "manageable"
+
+###########
+
+enlightening <- c(which(cleantext[,2] == "mindopening"), which(cleantext[,2] == "thoughtprovoking"), which(cleantext[,2] == "thinkoutofthebox"), which(cleantext[,2] == "enlighting"), which(cleantext[,2] == "eyeopening"))
+cleantext[enlightening, 2] <- "enlightening"
+
+###########
+
+motivational <- c(which(cleantext[,2] == "motivating"))
+cleantext[motivational, 2] <- "motivational"
+
+###########
+
+practical <- c(which(cleantext[,2] == "practicality"))
+cleantext[practical, 2] <- "practical"
+
+###########
+
+coding <- c(which(cleantext[,2] == "r"), which(cleantext[,2] == "programming"), which(cleantext[,2] == "computers"))
+cleantext[coding, 2] <- "coding"
+
+###########
+
+reaction <- c(which(cleantext[,2] == "reactionpaper"))
+cleantext[reaction, 2] <- "reaction"
+
+###########
+
+respectful <- c(which(cleantext[,2] == "respect"))
+cleantext[respectful, 2] <- "respectful"
+
+###########
+
+special <- c(which(cleantext[,2] == "unique"))
+cleantext[special, 2] <- "special"
+
+###########
+
+statistics <- c(which(cleantext[,2] == "stats"), which(cleantext[,2] == "basicstats"), which(cleantext[,2] == "analytical"))
+cleantext[statistics, 2] <- "statistics"
+
+###########
+
+concepts <- c(which(cleantext[,2] == "linearregression"), which(cleantext[,2] == "mlr"), which(cleantext[,2] == "slr"), which(cleantext[,2] == "regression"), which(cleantext[,2] == "math"), which(cleantext[,2] == "modeling"))
+cleantext[concepts, 2] <- "concepts"
+
+###########
+head(cleantext)
+q2themewords <- cleantext %>% count(word, sort = TRUE)
+q2themewords
+```
+
+Plot of cleaned words:
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+#cleantext
+#cleantext <- cleantext %>%
+#  arrange(desc(n))
+
+q2themewords %>% dplyr::filter(n > 1) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  xlab(NULL) +
+  theme_minimal() +
+  coord_flip() 
+
+#cleantext %>%
+#  count(word, sort = TRUE) %>%
+#  filter(n > 1) %>%
+#  mutate(word = reorder(word, n)) %>%
+#  ggplot(aes(word, n)) +
+#  geom_col() +
+#  xlab(NULL) +
+#  theme_minimal() +
+#  coord_flip()
+```
+
+Word Cloud of Cleaned Words:
+
+```{r}
+library("wordcloud")
+set.seed(2019)
+wordcloud(words = q2themewords$word, freq=q2themewords$n, min.freq = 1, max.words = 150, random.order = FALSE, rot.per = 0.35, colors = brewer.pal(5, "Paired"))
+```
+
+Some exploratory analysis:
+
+```{r}
+page1 <- read.csv("Statistics Data  - Page 1.csv", na.strings = c("", "NA"))
+#library(plyr)
+#View(page1)
+
+page1$GPA <- ordered(page1$GPA, levels = c("less than 2.5", "2.5 to 3.0", "3.0 to 3.5", "more than 3.5"))
+
+ggplot(page1, aes(x = GPA,fill = Attend)) + geom_bar(position = position_dodge()) + theme_minimal() + coord_flip() + labs(y = "Number of Students")
+```
+
+Large amount of students had a GPA of 3.5 or higher. Those who had 3.5 or higher mostly attended 90-100% of classes. People with 3.0-3.5 mostly attended 75% of class. 
+
+```{r}
+combo <- cbind(page1, finalproj[,3])
+#View(combo)
+```
+
+```{r}
+cleantext <- cleantext %>% group_by(line) %>% summarise(words = paste(word, collapse=" "))
+cleantext$ID <- textmine$ID
+cleantext <- cleantext[,-1]
+FINALDF <- full_join(combo, cleantext, by = "ID")
+FINALDF <- FINALDF[,-21]
+FINALDF
+```
+
+```{r}
+summary(FINALDF)
+```
+
+______________________________________________________________________________________________
+
+We wanted to look into the various characteristics and see if different groups expressed different opinions or concerns about the class:
+
+** INTERNATIONAL/NON INTERNATIONAL STUDENTS: **
+
+24 International responses, 25 Non International responses --> even though fewer non-international people in the class, more responded to the question. 
+
+International Student Responses (raw):
+
+```{r}
+comboint <- combo[which(combo$INT == "Yes"),]
+intwords <- comboint[,21]
+
+combonotint <- combo[which(combo$INT == "No"),]
+notintwords <- combonotint[,21]
+
+sum(is.na(comboint[,21]) == F)
+sum(is.na(combonotint[,21]) == F)
+
+library(dplyr)
+
+intwords <- intwords %>% na.omit()
+intwords <- as.character(intwords)
+
+intwords <- tibble(line = 1:length(intwords), text = intwords)
+
+library(tidytext)
+
+intwords <- intwords %>% unnest_tokens(word, text)
+intwordsdf <- as.data.frame(intwords[,2])
+#intwordsdf
+library(ggplot2)
+
+
+q2intwords <- intwordsdf %>% 
+  count(word, sort = TRUE) %>%
+  dplyr::filter(n > 1)
+
+#q2intwords
+
+q2intwords$word <- factor(q2intwords$word, levels = rev(factor(q2intwords$word)))
+
+ggplot(q2intwords, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (International)")
+```
+
+International Student Responses (clean):
+
+```{r}
+cleanint <- FINALDF[which(FINALDF$INT == "Yes"),]
+cleanintwords <- cleanint[,21]
+
+cleannotint <- FINALDF[which(FINALDF$INT == "No"),]
+cleannotintwords <- cleannotint[,21]
+
+library(dplyr)
+
+cleanintwords <- cleanintwords %>% na.omit()
+cleanintwords <- as.character(cleanintwords)
+
+cleanintwords <- tibble(line = 1:length(cleanintwords), text = cleanintwords)
+
+library(tidytext)
+
+cleanintwords <- cleanintwords %>% unnest_tokens(word, text)
+cleanintwordsdf <- as.data.frame(cleanintwords[,2])
+#cleanintwordsdf
+library(ggplot2)
+
+q2cleanintwords <- cleanintwordsdf %>% 
+  count(word, sort = TRUE) %>%
+  dplyr::filter(n > 1)
+#q2cleanintwords
+
+q2cleanintwords$word <- factor(q2cleanintwords$word, levels = rev(factor(q2cleanintwords$word)))
+
+ggplot(q2cleanintwords, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (International)")
+```
+
+Non-International Student Responses (clean):
+
+```{r}
+library(dplyr)
+
+cleannotintwords <- cleannotintwords %>% na.omit()
+cleannotintwords <- as.character(cleannotintwords)
+
+cleannotintwords <- tibble(line = 1:length(cleannotintwords), text = cleannotintwords)
+
+library(tidytext)
+
+cleannotintwords <- cleannotintwords %>% unnest_tokens(word, text)
+cleannotintwordsdf <- as.data.frame(cleannotintwords[,2])
+
+library(ggplot2)
+
+q2cleannotintwords <- cleannotintwordsdf %>% 
+  count(word, sort = TRUE) %>%
+  dplyr::filter(n > 1)
+#q2cleanintwords
+
+q2cleannotintwords$word <- factor(q2cleannotintwords$word, levels = rev(factor(q2cleannotintwords$word)))
+
+ggplot(q2cleannotintwords, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (Non-International)")
+```
+
+Top 5 themes for international students: diversity, interesting, enjoyable, team, difficult.
+
+Top 5 themes for non international students: diversity, interesting, applicable, enjoyable, difficult. 
+
+Not very different. 
+___________________________________________________________________________________________
+
+**Separating by GPA:**
+
+```{r}
+gpa1 <- FINALDF[which(FINALDF$GPA == "less than 2.5"),]
+gpa1words <- gpa1[,21]
+
+gpa2 <- FINALDF[which(FINALDF$GPA == "2.5 to 3.0"),]
+gpa2words <- gpa2[,21]
+
+gpa3 <- FINALDF[which(FINALDF$GPA == "3.0 to 3.5"),]
+gpa3words <- gpa3[,21]
+
+gpa4 <- FINALDF[which(FINALDF$GPA == "more than 3.5"),]
+gpa4words <- gpa4[,21]
+```
+
+GPA below 2.5:
+
+```{r}
+library(dplyr)
+
+gpa1words <- gpa1words %>% na.omit()
+gpa1words <- as.character(gpa1words)
+
+gpa1words <- tibble(line = 1:length(gpa1words), text = gpa1words)
+
+library(tidytext)
+
+gpa1words <- gpa1words %>% unnest_tokens(word, text)
+gpa1words
+gpa1wordsdf <- as.data.frame(gpa1words[,2])
+library(ggplot2)
+
+q2gpa1words <- gpa1wordsdf %>% 
+  count(word, sort = TRUE) %>%
+  dplyr::filter(n > 1)
+
+q2gpa1words$word <- factor(q2gpa1words$word, levels = rev(factor(q2gpa1words$word)))
+
+ggplot(q2gpa1words, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (GPA less than 2.5)")
+```
+
+Not many people have GPA below 2.5.
+
+GPA between 2.5 and 3.0:
+
+```{r}
+library(dplyr)
+
+gpa2words <- gpa2words %>% na.omit()
+gpa2words <- as.character(gpa2words)
+
+gpa2words <- tibble(line = 1:length(gpa2words), text = gpa2words)
+
+library(tidytext)
+
+gpa2words <- gpa2words %>% unnest_tokens(word, text)
+gpa2words
+gpa2wordsdf <- as.data.frame(gpa2words[,2])
+library(ggplot2)
+
+q2gpa2words <- gpa2wordsdf %>% 
+  count(word, sort = TRUE) %>%
+  dplyr::filter(n > 1)
+
+q2gpa2words$word <- factor(q2gpa2words$word, levels = rev(factor(q2gpa2words$word)))
+
+ggplot(q2gpa2words, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (GPA 2.5 to 3.0)")
+```
+
+Also not many people have GPA between 2.5 to 3.0. However, out of those people, most people said "diversity", "difficult", and "interesting". 
+
+GPA between 3.0 and 3.5:
+
+```{r}
+library(dplyr)
+
+gpa3words <- gpa3words %>% na.omit()
+gpa3words <- as.character(gpa3words)
+
+gpa3words <- tibble(line = 1:length(gpa3words), text = gpa3words)
+
+library(tidytext)
+
+gpa3words <- gpa3words %>% unnest_tokens(word, text)
+gpa3words
+gpa3wordsdf <- as.data.frame(gpa3words[,2])
+library(ggplot2)
+
+q2gpa3words <- gpa3wordsdf %>% 
+  count(word, sort = TRUE) %>%
+  dplyr::filter(n > 1)
+
+q2gpa3words$word <- factor(q2gpa3words$word, levels = rev(factor(q2gpa3words$word)))
+
+ggplot(q2gpa3words, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (GPA 3.0 to 3.5)")
+```
+
+Most use "diversity", "enjoyable", and "interesting".
+
+GPA about 3.5:
+
+```{r}
+library(dplyr)
+
+gpa4words <- gpa4words %>% na.omit()
+gpa4words <- as.character(gpa4words)
+
+gpa4words <- tibble(line = 1:length(gpa4words), text = gpa4words)
+
+library(tidytext)
+
+gpa4words <- gpa4words %>% unnest_tokens(word, text)
+gpa4words
+gpa4wordsdf <- as.data.frame(gpa4words[,2])
+library(ggplot2)
+
+q2gpa4words <- gpa4wordsdf %>% 
+  count(word, sort = TRUE) %>%
+  dplyr::filter(n > 1)
+
+q2gpa4words$word <- factor(q2gpa4words$word, levels = rev(factor(q2gpa4words$word)))
+
+ggplot(q2gpa4words, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (GPA 3.5 or more)")
+```
+
+Most used "interesting", "diversity", and "applicable". 
+
+Putting all plots together:
+
+```{r}
+#summary(FINALDF)
+par(mfrow = c(2,2))
+ggplot(q2gpa1words, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (GPA less than 2.5)")
+ggplot(q2gpa2words, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (GPA 2.5 to 3.0)")
+ggplot(q2gpa3words, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (GPA 3.0 to 3.5)")
+ggplot(q2gpa4words, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (GPA 3.5 or more)")
+```
+
+__________________________________________________________________________________________________________
+
+Recommend:
+
+3/5 did not respond to Page 3 - Question 2. 
+
+```{r}
+cleannotrec <- FINALDF[which(FINALDF$Recommend == "No"),]
+cleannotrecwords <- cleannotrec[,21]
+
+library(dplyr)
+
+cleannotrecwords <- cleannotrecwords %>% na.omit()
+cleannotrecwords <- as.character(cleannotrecwords)
+
+cleannotrecwords <- tibble(line = 1:length(cleannotrecwords), text = cleannotrecwords)
+
+library(tidytext)
+
+cleannotrecwords <- cleannotrecwords %>% unnest_tokens(word, text)
+cleannotrecwordsdf <- as.data.frame(cleannotrecwords[,2])
+#cleanintwordsdf
+library(ggplot2)
+
+q2cleannotrecwords <- cleannotrecwordsdf %>% 
+  count(word, sort = TRUE) #%>%
+#  filter(n > 1)
+
+q2cleannotrecwords$word <- factor(q2cleannotrecwords$word, levels = rev(factor(q2cleannotrecwords$word)))
+
+ggplot(q2cleannotrecwords, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (No Recommend)")
+```
+
+Not many people did not recommend the class. 
+
+------------------------------------------------------------------------------------------------------
+
+**Statistics Majors vs Non-Statistics Majors:**
+
+```{r}
+finalpage1 <- read.csv("Copy of Statistics Data  - Page 1.csv", na.strings = c("", "NA"))
+finalpage3 <- read.csv("Copy of Statistics Data  - Page 3.csv", na.strings = c("", "NA"))
+finalpage1$words <- finalpage3[,3]
+
+library(dplyr)
+#textmine <- textmine %>% na.omit()
+
+finalpage1$words <- as.character(finalpage1$words)
+
+majortext_df <- tibble(line = 1:length(finalpage1$words), text = finalpage1$words)
+
+library(tidytext)
+
+majortext_df <- majortext_df %>% unnest_tokens(word, text) %>% na.omit()
+majortext_df
+
+cleanmajortext <- majortext_df
+
+applicable <- c(which(cleanmajortext[,2] == "application"), which(cleanmajortext[,2] == "applicantdriven"), which(cleanmajortext[,2] == "realworld"), which(cleanmajortext[,2] == "useful"))
+cleanmajortext[applicable, 2] <- "applicable"
+
+##########
+
+difficult <- c(which(cleanmajortext[,2] == "challenging"), which(cleanmajortext[,2] == "hard"), which(cleanmajortext[,2] == "intensive"), which(cleanmajortext[,2] == "advance"), which(cleanmajortext[,2] == "complicated"), which(cleanmajortext[,2] == "overwhelming"), which(cleanmajortext[,2] == "toomuchinformation"), which(cleanmajortext[,2] == "dense"))
+cleanmajortext[difficult, 2] <- "difficult"
+
+############
+
+complex <- c(which(cleanmajortext[,2] == "comprehensive"), which(cleanmajortext[,2] == "crossdisciplinary"))
+cleanmajortext[complex, 2] <- "complex"
+
+###########
+
+collaborative <- c(which(cleanmajortext[,2] == "collaboration"), which(cleanmajortext[,2] == "cooperation"))
+cleanmajortext[collaborative, 2] <- "collaborative"
+
+###########
+
+team <- c(which(cleanmajortext[,2] == "group"), which(cleanmajortext[,2] == "groupwork"), which(cleanmajortext[,2] == "teamwork"), which(cleanmajortext[,2] == "teamworking"), which(cleanmajortext[,2] == "teamoriented"))
+cleanmajortext[team, 2] <- "team"
+
+###########
+
+diversity <- c(which(cleanmajortext[,2] == "diverse"))
+cleanmajortext[diversity, 2] <- "diversity"
+
+###########
+
+easy <- c(which(cleanmajortext[,2] == "notthathard"), which(cleanmajortext[,2] == "easycourse"), which(cleanmajortext[,2] == "simple"))
+cleanmajortext[easy, 2] <- "easy"
+
+############
+
+engaging <- c(which(cleanmajortext[,2] == "engagement"))
+cleanmajortext[engaging, 2] <- "engaging"
+
+###########
+
+enjoyable <- c(which(cleanmajortext[,2] == "enjoy"), which(cleanmajortext[,2] == "fun"), which(cleanmajortext[,2] == "joyful"), which(cleanmajortext[,2] == "happy"))
+cleanmajortext[enjoyable, 2] <- "enjoyable"
+
+############
+
+positive <- c(which(cleanmajortext[,2] == "good"))
+cleanmajortext[positive, 2] <- "positive"
+
+############
+
+interactive <- c(which(cleantext[,2] == "handson"))
+cleantext[interactive, 2] <- "interactive"
+
+############
+
+insightful <- c(which(cleanmajortext[,2] == "insight"))
+cleanmajortext[insightful, 2] <- "insightful"
+
+############
+
+interesting <- c(which(cleanmajortext[,2] == "intriguing"))
+cleanmajortext[interesting, 2] <- "interesting"
+
+###########
+
+manageable <- c(which(cleanmajortext[,2] == "managable"))
+cleanmajortext[manageable, 2] <- "manageable"
+
+###########
+
+enlightening <- c(which(cleanmajortext[,2] == "mindopening"), which(cleanmajortext[,2] == "thoughtprovoking"), which(cleanmajortext[,2] == "thinkoutofthebox"), which(cleanmajortext[,2] == "enlighting"), which(cleanmajortext[,2] == "eyeopening"))
+cleanmajortext[enlightening, 2] <- "enlightening"
+
+###########
+
+motivational <- c(which(cleanmajortext[,2] == "motivating"))
+cleanmajortext[motivational, 2] <- "motivational"
+
+###########
+
+practical <- c(which(cleanmajortext[,2] == "practicality"))
+cleanmajortext[practical, 2] <- "practical"
+
+###########
+
+coding <- c(which(cleanmajortext[,2] == "r"), which(cleanmajortext[,2] == "programming"), which(cleanmajortext[,2] == "computers"))
+cleanmajortext[coding, 2] <- "coding"
+
+###########
+
+reaction <- c(which(cleanmajortext[,2] == "reactionpaper"))
+cleanmajortext[reaction, 2] <- "reaction"
+
+###########
+
+respectful <- c(which(cleanmajortext[,2] == "respect"))
+cleanmajortext[respectful, 2] <- "respectful"
+
+###########
+
+special <- c(which(cleanmajortext[,2] == "unique"))
+cleanmajortext[special, 2] <- "special"
+
+###########
+
+statistics <- c(which(cleanmajortext[,2] == "stats"), which(cleanmajortext[,2] == "basicstats"), which(cleanmajortext[,2] == "analytical"))
+cleanmajortext[statistics, 2] <- "statistics"
+
+###########
+
+concepts <- c(which(cleanmajortext[,2] == "linearregression"), which(cleanmajortext[,2] == "mlr"), which(cleanmajortext[,2] == "slr"), which(cleanmajortext[,2] == "regression"), which(cleanmajortext[,2] == "math"), which(cleanmajortext[,2] == "modeling"))
+cleanmajortext[concepts, 2] <- "concepts"
+
+###########
+
+cleanmajortext <- cleanmajortext %>% group_by(line) %>% summarise(words = paste(word, collapse=" "))
+finalpage1$line <- c(1:70)
+cleanmajortext <- dplyr::full_join(finalpage1, cleanmajortext, by = "line")
+cleanmajortext <- cleanmajortext[,-c(21:22)]
+```
+
+
+```{r}
+statsmajor <- cleanmajortext[which(cleanmajortext$Major == "Statistics"),]
+statsmajorwords <- statsmajor[,21]
+
+nonstatsmajor <- cleanmajortext[which(cleanmajortext$Major != "Statistics"),]
+nonstatsmajorwords <- nonstatsmajor[,21]
+```
+
+Words Used by Statistics Majors (clean):
+
+```{r}
+library(dplyr)
+
+statsmajorwords <- statsmajorwords %>% na.omit()
+statsmajorwords <- as.character(statsmajorwords)
+
+statsmajorwords <- tibble(line = 1:length(statsmajorwords), text = statsmajorwords)
+
+library(tidytext)
+
+statsmajorwords <- statsmajorwords %>% unnest_tokens(word, text)
+statsmajorwords
+statswordsdf <- as.data.frame(statsmajorwords[,2])
+library(ggplot2)
+
+q2statswords <- statswordsdf %>% 
+  count(word, sort = TRUE) %>%
+  dplyr::filter(n > 1)
+
+q2statswords$word <- factor(q2statswords$word, levels = rev(factor(q2statswords$word)))
+
+ggplot(q2statswords, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (Stats Majors)")
+```
+
+Words Used by Non-Statistics Majors:
+
+```{r}
+library(dplyr)
+
+nonstatsmajorwords <- nonstatsmajorwords %>% na.omit()
+nonstatsmajorwords <- as.character(nonstatsmajorwords)
+
+nonstatsmajorwords <- tibble(line = 1:length(nonstatsmajorwords), text = nonstatsmajorwords)
+
+library(tidytext)
+
+nonstatsmajorwords <- nonstatsmajorwords %>% unnest_tokens(word, text)
+nonstatsmajorwords
+nonstatswordsdf <- as.data.frame(nonstatsmajorwords[,2])
+library(ggplot2)
+
+q2nonstatswords <- nonstatswordsdf %>% 
+  count(word, sort = TRUE) %>%
+  dplyr::filter(n > 1)
+
+q2nonstatswords$word <- factor(q2nonstatswords$word, levels = rev(factor(q2nonstatswords$word)))
+
+ggplot(q2nonstatswords, aes(x = word, y = n, fill = word)) + geom_bar(stat = "identity") + coord_flip() + theme_minimal() + theme(legend.position = "none") + labs(y ="Number of Students (Non Stats Majors)")
+```
+
+Graphically Depicting Words Used by Statistics Majors vs Non-Statistics Majors:
+
+- 50/50 split between Statistics and Non-Statistics Majors (including double majors). 
+
+```{r}
+majorcombo <- dplyr::full_join(q2nonstatswords, q2statswords, by = "word")
+colnames(majorcombo)[c(2,3)] <- c("nonstats","stats")
+majorcombo <- majorcombo %>% replace_na(list(nonstats = 0, stats = 0))
+
+
+library(ggrepel)
+ggplot(majorcombo, aes(x = stats, y = nonstats, col = word, label = word)) + geom_point() + theme_minimal() + theme(legend.position = "none") + geom_abline(intercept = 0, slope = 1) + geom_text_repel(aes(label = word), size = 2.5)
+```
+
